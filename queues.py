@@ -1,4 +1,4 @@
-# queues.py
+# queues.py (Creating a Queue, Stack and Priority Queues)
 
 from collections import deque
 from heapq import heappop, heappush
@@ -15,16 +15,14 @@ class IterableMixin:
 
 
 class Queue(IterableMixin):
-    def __init__(self):
-        self._elements = []
-        self._counter = count()
+    def __init__(self, *elements):
+        self._elements = deque(elements)
 
-    def enqueue_with_priority(self, priority, value):
-        element = (-priority, next(self._counter), value)
-        heappush(self._elements, element)
+    def enqueue_with_priority(self, element):
+        self.elements.append(element)
 
     def dequeue(self):
-        return heappop(self._elements)[-1]
+        return self.elements.popleft()
 
 
 class Stack(Queue):
@@ -35,9 +33,11 @@ class Stack(Queue):
 class PriorityQueue:
     def __init__(self):
         self._elements = []
+        self._counter = count()
 
     def enqueue_with_priority(self, priority, value):
-        heappush(self._elements, (priority, value))
+        element = (-priority, next(self._counter), value)
+        heappush(self._elements, element)
 
     def dequeue(self):
-        return heappop(self._elements)[1]
+        return heappop(self._elements)[-1]
