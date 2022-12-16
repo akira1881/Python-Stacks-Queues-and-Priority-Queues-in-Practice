@@ -14,15 +14,11 @@ class Job(NamedTuple):
     url: str
     depth: int = 1
 
-    def __lt__(self, other):
-        if isinstance(other, Job):
-            return len(self.url) < len(other.url)
-
 async def main(args):
     session = aiohttp.ClientSession()
     try:
         links = Counter()
-        queue = asyncio.PriorityQueue()
+        queue = asyncio.Queue()
         tasks = [
             asyncio.create_task(
                 worker(
@@ -38,6 +34,31 @@ async def main(args):
 
         await queue.put(Job(args.url))
         await queue.join()
+        for task in tasks:
+            task.cancel()
+        
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+        display(links)
+    finally:
+        await session.close()
+
+async def worker(worker_id, session, queue, links, max_depth):
+    print(f"[{worker_id} starting]", file=sys.stderr)
+    while True:
+        url, depth = await queue.get()
+        links[url] +=1
+        try:
+            if depth <= max_depth:
+                print(f"[{worker_id} {depth=} {url=}]", file=sys.stderr)
+                if html := await fetch_html(session, url):
+                    for link_url in parse_links(url, html):
+                        await queue.put(Job(link_url, depth + 1))
+        except aiohttp.ClientError:
+            print(f"[{worker_id} failed at {url=}]", file=sys.stderr)
+
+        finally:
+            queue.task_done()
 
 def parse_args():
     parser = argparse.ArgumentParser()

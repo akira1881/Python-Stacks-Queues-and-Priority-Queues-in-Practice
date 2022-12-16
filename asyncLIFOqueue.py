@@ -18,7 +18,7 @@ async def main(args):
     session = aiohttp.ClientSession()
     try:
         links = Counter()
-        queue = asyncio.LifoQueue() # Instantiates an asynchronous LIFO queue
+        queue = asyncio.LifoQueue()
         tasks = [
             asyncio.create_task(
                 worker(
@@ -32,8 +32,8 @@ async def main(args):
             for i in range(args.num_workers)
         ]
 
-        await queue.put(Job(args.url)) # Puts the first job in the queue, which kicks off the crawling
-        await queue.join() # Causes the main coroutine to wait until the queue has been drained and there are no more jobs to perform
+        await queue.put(Job(args.url))
+        await queue.join()
         for task in tasks:
             task.cancel()
         
