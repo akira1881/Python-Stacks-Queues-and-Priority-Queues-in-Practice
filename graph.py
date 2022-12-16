@@ -2,6 +2,7 @@
 
 from typing import NamedTuple
 import networkx as nx
+from graph import City, load_graph
 from queues import Queue
 
 
